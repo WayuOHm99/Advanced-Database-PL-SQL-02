@@ -1,6 +1,5 @@
 CREATE OR REPLACE PACKAGE BODY EMP_PACKAGE AS
 
-    -- Procedure to display the highest-paid employee in a department
     PROCEDURE DEPT_REPORT(p_dept_id NUMBER) IS
         v_emp_name EMPLOYEES.FIRST_NAME%TYPE;
         v_salary EMPLOYEES.SALARY%TYPE;
@@ -17,7 +16,6 @@ CREATE OR REPLACE PACKAGE BODY EMP_PACKAGE AS
             DBMS_OUTPUT.PUT_LINE('No employees found in department ' || p_dept_id);
     END DEPT_REPORT;
 
-    -- Function to log employee work entry time
     FUNCTION EMP_WORK_LOG(p_emp_id NUMBER) RETURN VARCHAR2 IS
         v_message VARCHAR2(100);
     BEGIN
