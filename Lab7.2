@@ -26,7 +26,6 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE('-----------------------');
 
         FOR emp_rec IN c_emp(v_hire_year) LOOP
-            -- Calculate years and months of employment
             v_years := TRUNC(MONTHS_BETWEEN(SYSDATE, emp_rec.hire_date) / 12);
             v_months := TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, emp_rec.hire_date), 12));
 
