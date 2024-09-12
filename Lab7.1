@@ -13,7 +13,6 @@ DECLARE
     
 BEGIN
     FOR emp_rec IN emp_cursor LOOP
-        -- Display employee details
         DBMS_OUTPUT.PUT_LINE('Employee ID: ' || emp_rec.employee_id);
         DBMS_OUTPUT.PUT_LINE('Employee Name: ' || emp_rec.employee_name);
         DBMS_OUTPUT.PUT_LINE('Hire Date: ' || TO_CHAR(emp_rec.hire_date, 'DD-MON-YYYY'));
