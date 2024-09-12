@@ -2,17 +2,17 @@ CREATE OR REPLACE PROCEDURE DEPT_REPORT(p_dept_id NUMBER) IS
     v_emp_name EMPLOYEES.FIRST_NAME%TYPE;
     v_salary EMPLOYEES.SALARY%TYPE;
 BEGIN
-    -- Fetch the employee with the highest salary in the department
+
     SELECT FIRST_NAME || ' ' || LAST_NAME, SALARY
     INTO v_emp_name, v_salary
     FROM EMPLOYEES
     WHERE DEPARTMENT_ID = p_dept_id
     AND SALARY = (SELECT MAX(SALARY) FROM EMPLOYEES WHERE DEPARTMENT_ID = p_dept_id);
     
-    -- Output the result
+
     DBMS_OUTPUT.PUT_LINE('Highest Paid Employee: ' || v_emp_name || ', Salary: ' || v_salary);
 EXCEPTION
-    -- Handle the case where no employees are found
+
     WHEN NO_DATA_FOUND THEN
         DBMS_OUTPUT.PUT_LINE('No employees found in department ' || p_dept_id);
 END DEPT_REPORT;
