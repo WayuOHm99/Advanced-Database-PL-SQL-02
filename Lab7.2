@@ -1,43 +1,35 @@
 DECLARE
-    -- Cursor to select distinct hire years from employees, ordered by most recent year
     CURSOR c_year IS
         SELECT DISTINCT EXTRACT(YEAR FROM hire_date) AS hire_year
         FROM employees
         ORDER BY hire_year DESC;
 
-    -- Nested cursor to select employees hired in a specific year (p_year)
     CURSOR c_emp(p_year NUMBER) IS
         SELECT employee_id, first_name || ' ' || last_name AS employee_name, hire_date
         FROM employees
         WHERE EXTRACT(YEAR FROM hire_date) = p_year
         ORDER BY employee_name;
 
-    -- Variables to hold cursor values
     v_hire_year  NUMBER;
     v_employee_id employees.employee_id%TYPE;
     v_employee_name employees.first_name%TYPE;
     v_hire_date employees.hire_date%TYPE;
 
-    -- Variables for employment duration
     v_years   NUMBER;
     v_months  NUMBER;
 
 BEGIN
-    -- Loop through each hire year
     FOR year_rec IN c_year LOOP
         v_hire_year := year_rec.hire_year;
 
-        -- Display the year
         DBMS_OUTPUT.PUT_LINE('Year: ' || v_hire_year);
         DBMS_OUTPUT.PUT_LINE('-----------------------');
 
-        -- Loop through employees hired in that specific year
         FOR emp_rec IN c_emp(v_hire_year) LOOP
             -- Calculate years and months of employment
             v_years := TRUNC(MONTHS_BETWEEN(SYSDATE, emp_rec.hire_date) / 12);
             v_months := TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, emp_rec.hire_date), 12));
 
-            -- Display employee details
             DBMS_OUTPUT.PUT_LINE('Employee ID: ' || emp_rec.employee_id);
             DBMS_OUTPUT.PUT_LINE('Employee Name: ' || emp_rec.employee_name);
             DBMS_OUTPUT.PUT_LINE('Hire Date: ' || TO_CHAR(emp_rec.hire_date, 'DD-MON-YYYY'));
