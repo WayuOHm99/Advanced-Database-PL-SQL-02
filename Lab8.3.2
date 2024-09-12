@@ -1,0 +1,31 @@
+CREATE OR REPLACE PACKAGE BODY EMP_PACKAGE AS
+
+    -- Procedure to display the highest-paid employee in a department
+    PROCEDURE DEPT_REPORT(p_dept_id NUMBER) IS
+        v_emp_name EMPLOYEES.FIRST_NAME%TYPE;
+        v_salary EMPLOYEES.SALARY%TYPE;
+    BEGIN
+        SELECT FIRST_NAME || ' ' || LAST_NAME, SALARY
+        INTO v_emp_name, v_salary
+        FROM EMPLOYEES
+        WHERE DEPARTMENT_ID = p_dept_id
+        AND SALARY = (SELECT MAX(SALARY) FROM EMPLOYEES WHERE DEPARTMENT_ID = p_dept_id);
+        
+        DBMS_OUTPUT.PUT_LINE('Highest Paid Employee: ' || v_emp_name || ', Salary: ' || v_salary);
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('No employees found in department ' || p_dept_id);
+    END DEPT_REPORT;
+
+    -- Function to log employee work entry time
+    FUNCTION EMP_WORK_LOG(p_emp_id NUMBER) RETURN VARCHAR2 IS
+        v_message VARCHAR2(100);
+    BEGIN
+        INSERT INTO WORK_LOG (EMPLOYEE_ID, ENTRY_TIME)
+        VALUES (p_emp_id, SYSTIMESTAMP);
+        
+        v_message := p_emp_id || ' on ' || TO_CHAR(SYSDATE, 'DD/MM/YYYY') || ' at ' || TO_CHAR(SYSDATE, 'HH:MI AM');
+        RETURN v_message;
+    END EMP_WORK_LOG;
+
+END EMP_PACKAGE;
