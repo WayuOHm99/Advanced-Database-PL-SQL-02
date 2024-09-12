@@ -2,13 +2,10 @@ CREATE OR REPLACE FUNCTION EMP_WORK_LOG(p_emp_id NUMBER)
 RETURN VARCHAR2 IS
     v_message VARCHAR2(100);
 BEGIN
-    -- Insert the employee log entry into WORK_LOG table
     INSERT INTO WORK_LOG (EMPLOYEE_ID, ENTRY_TIME)
     VALUES (p_emp_id, SYSTIMESTAMP);
     
-    -- Format the return message
     v_message := p_emp_id || ' on ' || TO_CHAR(SYSDATE, 'DD/MM/YYYY') || ' at ' || TO_CHAR(SYSDATE, 'HH:MI AM');
-    
-    -- Return the log message
+
     RETURN v_message;
 END EMP_WORK_LOG;
