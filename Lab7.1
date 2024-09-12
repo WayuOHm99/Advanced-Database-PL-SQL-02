@@ -1,5 +1,4 @@
 DECLARE
-    -- Declare a cursor to select employee details for names starting with 'C' to 'H'
     CURSOR emp_cursor IS
         SELECT employee_id, first_name || ' ' || last_name AS employee_name, hire_date, 
                NVL(commission_pct, 0) AS commission_pct
@@ -7,14 +6,12 @@ DECLARE
         WHERE UPPER(SUBSTR(first_name, 1, 1)) BETWEEN 'C' AND 'H'
         ORDER BY employee_name;
 
-    -- Declare variables to hold the cursor values
     v_employee_id    employees.employee_id%TYPE;
     v_employee_name  employees.first_name%TYPE;
     v_hire_date      employees.hire_date%TYPE;
     v_commission_pct employees.commission_pct%TYPE;
     
 BEGIN
-    -- Loop through the cursor
     FOR emp_rec IN emp_cursor LOOP
         -- Display employee details
         DBMS_OUTPUT.PUT_LINE('Employee ID: ' || emp_rec.employee_id);
