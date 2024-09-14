@@ -1,39 +1,17 @@
-DECLARE
-    CURSOR c_year IS
-        SELECT DISTINCT EXTRACT(YEAR FROM hire_date) AS hire_year
-        FROM employees
-        ORDER BY hire_year DESC;
-
-    CURSOR c_emp(p_year NUMBER) IS
-        SELECT employee_id, first_name || ' ' || last_name AS employee_name, hire_date
-        FROM employees
-        WHERE EXTRACT(YEAR FROM hire_date) = p_year
-        ORDER BY employee_name;
-
-    v_hire_year  NUMBER;
-    v_employee_id employees.employee_id%TYPE;
-    v_employee_name employees.first_name%TYPE;
-    v_hire_date employees.hire_date%TYPE;
-
-    v_years   NUMBER;
-    v_months  NUMBER;
-
 BEGIN
-    FOR year_rec IN c_year LOOP
-        v_hire_year := year_rec.hire_year;
+    FOR year_rec IN (SELECT DISTINCT EXTRACT(YEAR FROM hire_date) hire_year FROM employees ORDER BY hire_year DESC) LOOP
+        DBMS_OUTPUT.PUT_LINE('Year: ' || year_rec.hire_year || CHR(10) || '-----------------------');
+        FOR emp_rec IN (SELECT employee_id, first_name || ' ' || last_name AS employee_name, TO_CHAR(hire_date, 'DD-MON-YYYY') hire_date,
+                               TRUNC(MONTHS_BETWEEN(SYSDATE, hire_date) / 12) years, 
+                               TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, hire_date), 12)) months
+                        FROM employees
+                        WHERE EXTRACT(YEAR FROM hire_date) = year_rec.hire_year
+                        ORDER BY employee_name) LOOP
 
-        DBMS_OUTPUT.PUT_LINE('Year: ' || v_hire_year);
-        DBMS_OUTPUT.PUT_LINE('-----------------------');
-
-        FOR emp_rec IN c_emp(v_hire_year) LOOP
-            v_years := TRUNC(MONTHS_BETWEEN(SYSDATE, emp_rec.hire_date) / 12);
-            v_months := TRUNC(MOD(MONTHS_BETWEEN(SYSDATE, emp_rec.hire_date), 12));
-
-            DBMS_OUTPUT.PUT_LINE('Employee ID: ' || emp_rec.employee_id);
-            DBMS_OUTPUT.PUT_LINE('Employee Name: ' || emp_rec.employee_name);
-            DBMS_OUTPUT.PUT_LINE('Hire Date: ' || TO_CHAR(emp_rec.hire_date, 'DD-MON-YYYY'));
-            DBMS_OUTPUT.PUT_LINE('Employment Duration: ' || v_years || ' years, ' || v_months || ' months');
-            DBMS_OUTPUT.PUT_LINE('-----------------------');
+            DBMS_OUTPUT.PUT_LINE('ID: ' || emp_rec.employee_id || ', Name: ' || emp_rec.employee_name || 
+                                 ', Hire: ' || emp_rec.hire_date || 
+                                 ', Duration: ' || emp_rec.years || ' years, ' || emp_rec.months || ' months' || 
+                                 CHR(10) || '-----------------------');
         END LOOP;
     END LOOP;
 END;
