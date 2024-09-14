@@ -2,66 +2,102 @@
 CREATE OR REPLACE PACKAGE EMP_PACKAGE AS
     PROCEDURE DEPT_REPORT(p_dept_id NUMBER);
     FUNCTION EMP_WORK_LOG(p_emp_id NUMBER) RETURN VARCHAR2;
+    PROCEDURE LOG_ERROR(p_err_msg VARCHAR2);  -- ฟังก์ชันสำหรับล็อกข้อผิดพลาด
 END EMP_PACKAGE;
 /
 
--- สร้าง Package Body
+-- สร้าง Package Body ที่ได้รับการปรับปรุง
 CREATE OR REPLACE PACKAGE BODY EMP_PACKAGE AS
 
     -- PROCEDURE: DEPT_REPORT
     PROCEDURE DEPT_REPORT(p_dept_id NUMBER) IS
         v_emp_name EMPLOYEES.FIRST_NAME%TYPE;
         v_salary EMPLOYEES.SALARY%TYPE;
+        CURSOR emp_cursor IS  -- ใช้ cursor ในกรณีที่มีพนักงานมากกว่า 1 คนที่มีเงินเดือนสูงสุด
+            SELECT FIRST_NAME || ' ' || LAST_NAME AS FULL_NAME, SALARY
+            FROM EMPLOYEES
+            WHERE DEPARTMENT_ID = p_dept_id
+            AND SALARY = (SELECT MAX(SALARY) FROM EMPLOYEES WHERE DEPARTMENT_ID = p_dept_id);
     BEGIN
         -- ตรวจสอบว่าพารามิเตอร์ p_dept_id มีค่าถูกต้อง
         IF p_dept_id IS NULL OR p_dept_id <= 0 THEN
             DBMS_OUTPUT.PUT_LINE('Invalid department ID.');
             RETURN;
         END IF;
-        
-        -- ดึงข้อมูลพนักงานที่มีเงินเดือนสูงสุดในแผนก
-        SELECT FIRST_NAME || ' ' || LAST_NAME, SALARY
-        INTO v_emp_name, v_salary
-        FROM EMPLOYEES
-        WHERE DEPARTMENT_ID = p_dept_id
-        AND SALARY = (SELECT MAX(SALARY) FROM EMPLOYEES WHERE DEPARTMENT_ID = p_dept_id);
-        
-        -- แสดงข้อมูลพนักงานที่มีเงินเดือนสูงสุด
-        DBMS_OUTPUT.PUT_LINE('Highest Paid Employee: ' || v_emp_name || ', Salary: ' || v_salary);
-        
+
+        OPEN emp_cursor;
+        LOOP
+            FETCH emp_cursor INTO v_emp_name, v_salary;
+            EXIT WHEN emp_cursor%NOTFOUND;
+            
+            -- แสดงข้อมูลพนักงานที่มีเงินเดือนสูงสุด
+            DBMS_OUTPUT.PUT_LINE('Highest Paid Employee: ' || v_emp_name || ', Salary: ' || v_salary);
+        END LOOP;
+        CLOSE emp_cursor;
+
     EXCEPTION
         WHEN NO_DATA_FOUND THEN
             -- ข้อผิดพลาดเมื่อไม่พบพนักงานในแผนกที่ระบุ
             DBMS_OUTPUT.PUT_LINE('No employees found in department ' || p_dept_id);
+            LOG_ERROR('No employees found in department ' || p_dept_id);  -- บันทึกข้อผิดพลาด
         WHEN OTHERS THEN
+            -- ข้อผิดพลาดทั่วไป
             DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+            LOG_ERROR('An error occurred: ' || SQLERRM);  -- บันทึกข้อผิดพลาด
     END DEPT_REPORT;
 
     -- FUNCTION: EMP_WORK_LOG
     FUNCTION EMP_WORK_LOG(p_emp_id NUMBER) RETURN VARCHAR2 IS
         v_message VARCHAR2(100);
+        v_emp_exists NUMBER;
     BEGIN
         -- ตรวจสอบว่า p_emp_id มีค่าถูกต้อง
         IF p_emp_id IS NULL OR p_emp_id <= 0 THEN
             RETURN 'Invalid employee ID.';
         END IF;
 
-        -- เพิ่มข้อมูลการทำงานลงใน WORK_LOG
-        INSERT INTO WORK_LOG (EMPLOYEE_ID, LOG_TIME)
-        VALUES (p_emp_id, SYSTIMESTAMP);
-        
-        COMMIT;
-        
-        -- สร้างข้อความผลลัพธ์ที่จะแสดง
-        v_message := 'Employee ' || p_emp_id || ' logged work on ' || 
-                     TO_CHAR(SYSDATE, 'DD/MM/YYYY') || ' at ' || 
-                     TO_CHAR(SYSDATE, 'HH:MI AM');
-                     
-        RETURN v_message;
-        
-    EXCEPTION
-        WHEN OTHERS THEN
-            RETURN 'An error occurred: ' || SQLERRM;
+        -- ตรวจสอบว่าพนักงานที่ระบุมีอยู่จริง
+        SELECT COUNT(*)
+        INTO v_emp_exists
+        FROM EMPLOYEES
+        WHERE EMPLOYEE_ID = p_emp_id;
+
+        IF v_emp_exists = 0 THEN
+            RETURN 'Employee ID not found.';
+        END IF;
+
+        -- เริ่ม Transaction
+        BEGIN
+            -- เพิ่มข้อมูลการทำงานลงใน WORK_LOG
+            INSERT INTO WORK_LOG (EMPLOYEE_ID, LOG_TIME)
+            VALUES (p_emp_id, SYSTIMESTAMP);
+            
+            -- คอมมิตข้อมูลที่แทรกลงไป
+            COMMIT;
+
+            -- สร้างข้อความผลลัพธ์ที่จะแสดง
+            v_message := 'Employee ' || p_emp_id || ' logged work on ' || 
+                         TO_CHAR(SYSDATE, 'DD/MM/YYYY') || ' at ' || 
+                         TO_CHAR(SYSDATE, 'HH:MI AM');
+                         
+            -- คืนค่าข้อความผลลัพธ์
+            RETURN v_message;
+        EXCEPTION
+            WHEN OTHERS THEN
+                ROLLBACK;  -- Rollback ถ้ามีข้อผิดพลาดเกิดขึ้น
+                LOG_ERROR('An error occurred during work log entry: ' || SQLERRM);  -- บันทึกข้อผิดพลาด
+                RETURN 'An error occurred: ' || SQLERRM;
+        END;
+
     END EMP_WORK_LOG;
 
+    -- PROCEDURE: LOG_ERROR สำหรับบันทึกข้อผิดพลาด
+    PROCEDURE LOG_ERROR(p_err_msg VARCHAR2) IS
+    BEGIN
+        INSERT INTO ERROR_LOG (ERROR_MESSAGE, ERROR_TIME)  -- สมมติว่ามีตาราง ERROR_LOG สำหรับบันทึกข้อผิดพลาด
+        VALUES (p_err_msg, SYSTIMESTAMP);
+        COMMIT;
+    END LOG_ERROR;
+
 END EMP_PACKAGE;
+/
