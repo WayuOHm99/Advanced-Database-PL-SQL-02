@@ -1,22 +1,14 @@
-DECLARE
-    CURSOR emp_cursor IS
+BEGIN
+    FOR emp_rec IN (
         SELECT employee_id, first_name || ' ' || last_name AS employee_name, hire_date, 
-               NVL(commission_pct, 0) AS commission_pct
+               NVL(commission_pct * 100, 0) || '%' AS commission_pct
         FROM employees
         WHERE UPPER(SUBSTR(first_name, 1, 1)) BETWEEN 'C' AND 'H'
-        ORDER BY employee_name;
-
-    v_employee_id    employees.employee_id%TYPE;
-    v_employee_name  employees.first_name%TYPE;
-    v_hire_date      employees.hire_date%TYPE;
-    v_commission_pct employees.commission_pct%TYPE;
-    
-BEGIN
-    FOR emp_rec IN emp_cursor LOOP
-        DBMS_OUTPUT.PUT_LINE('Employee ID: ' || emp_rec.employee_id);
-        DBMS_OUTPUT.PUT_LINE('Employee Name: ' || emp_rec.employee_name);
-        DBMS_OUTPUT.PUT_LINE('Hire Date: ' || TO_CHAR(emp_rec.hire_date, 'DD-MON-YYYY'));
-        DBMS_OUTPUT.PUT_LINE('Commission: ' || emp_rec.commission_pct * 100 || '%');
-        DBMS_OUTPUT.PUT_LINE('-----------------------------');
+        ORDER BY employee_name
+    ) LOOP
+        DBMS_OUTPUT.PUT_LINE('ID: ' || emp_rec.employee_id || 
+                             ', Name: ' || emp_rec.employee_name || 
+                             ', Hire Date: ' || TO_CHAR(emp_rec.hire_date, 'DD-MON-YYYY') || 
+                             ', Commission: ' || emp_rec.commission_pct);
     END LOOP;
 END;
