@@ -7,7 +7,6 @@ BEGIN
                         FROM employees
                         WHERE EXTRACT(YEAR FROM hire_date) = year_rec.hire_year
                         ORDER BY employee_name) LOOP
-
             DBMS_OUTPUT.PUT_LINE('ID: ' || emp_rec.employee_id || ', Name: ' || emp_rec.employee_name || 
                                  ', Hire: ' || emp_rec.hire_date || 
                                  ', Duration: ' || emp_rec.years || ' years, ' || emp_rec.months || ' months' || 
