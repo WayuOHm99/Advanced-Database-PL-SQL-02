@@ -2,28 +2,37 @@ DECLARE
     v_dept_id NUMBER := &department_id;
     v_emp_name VARCHAR2(100);
     v_salary NUMBER;
-    
     CURSOR c_max_salary IS
         SELECT first_name || ' ' || last_name AS full_name, salary
         FROM employees e
         WHERE e.department_id = v_dept_id
         AND e.salary = (SELECT MAX(salary) FROM employees WHERE department_id = v_dept_id);
-    
     no_employees_found EXCEPTION;
+    invalid_department EXCEPTION;
+    v_empty_cursor BOOLEAN := FALSE;
 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM departments WHERE department_id = v_dept_id) THEN
+        RAISE invalid_department;
+    END IF;
     OPEN c_max_salary;
     FETCH c_max_salary INTO v_emp_name, v_salary;
-    
     IF c_max_salary%NOTFOUND THEN
-        RAISE no_employees_found;
+        v_empty_cursor := TRUE;
     END IF;
-    
-    DBMS_OUTPUT.PUT_LINE('Top employee: ' || v_emp_name || ' ($' || TO_CHAR(v_salary, '999,999.00') || ')');
-    
     CLOSE c_max_salary;
+    IF v_empty_cursor THEN
+        RAISE no_employees_found;
+    ELSE
+        DBMS_OUTPUT.PUT_LINE('Top employee in Department ' || v_dept_id || ': ' || v_emp_name || ' ($' || TO_CHAR(v_salary, '999,999.00') || ')');
+    END IF;
 EXCEPTION
     WHEN no_employees_found THEN
-        DBMS_OUTPUT.PUT_LINE('No employee work for this department (' || v_dept_id || ')!');
+        DBMS_OUTPUT.PUT_LINE('No employee works for department ' || v_dept_id || '!');
+    WHEN invalid_department THEN
+        DBMS_OUTPUT.PUT_LINE('Invalid department ID: ' || v_dept_id || '. Please enter a valid department.');
     WHEN OTHERS THEN
-        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+        IF c_max_salary%ISOPEN THEN
+            CLOSE c_max_salary;
+        END IF;
+        DBMS_OUTPUT.PUT_LINE('An unexpected error occurred: ' || SQLERRM || ' (Department ID: ' || v_dept_id || ')');
 END;
