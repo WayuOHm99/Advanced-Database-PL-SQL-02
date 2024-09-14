@@ -10,7 +10,6 @@ DECLARE
 BEGIN
     OPEN c_max_salary;
     FETCH c_max_salary INTO v_emp_name, v_salary;
-    
     IF c_max_salary%NOTFOUND THEN
         DBMS_OUTPUT.PUT_LINE('No employee work for this department (' || v_dept_id || ')!');
     ELSE
