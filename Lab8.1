@@ -32,7 +32,7 @@ BEGIN
     END LOOP;
     CLOSE emp_cursor;
     IF v_employee_count = 0 THEN
-        DBMS_OUTPUT.PUT_LINE('No employees found in department ' || p_dept_id);
+        DBMS_OUTPUT.PUT_LINE('No employee work for this department (' || v_dept_id || ')!');
     END IF;
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
