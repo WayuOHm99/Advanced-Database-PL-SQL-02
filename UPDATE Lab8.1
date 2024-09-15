@@ -20,7 +20,7 @@ BEGIN
 
 EXCEPTION
     WHEN NO_DATA_FOUND THEN
-        DBMS_OUTPUT.PUT_LINE('No employees found in department ' || p_dept_id);
+        DBMS_OUTPUT.PUT_LINE('No employee work for this department (' || v_dept_id || ')!');
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
 END DEPT_REPORT;
