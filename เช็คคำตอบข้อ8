@@ -1,28 +1,12 @@
 เช็ต 8.1
 BEGIN
-    DEPT_REPORT(10);  -- ระบุ department_id ที่ต้องการ
+    DEPT_REPORT(50);  -- ระบุ department_id ที่ต้องการ
 END;
 
 เช็ค 8.2
 DECLARE
     v_result VARCHAR2(100);
 BEGIN
-    v_result := EMP_WORK_LOG(1001);  -- ระบุ employee_id ที่ต้องการ
+    v_result := EMP_WORK_LOG(1000);  -- ระบุ employee_id ที่ต้องการ
     DBMS_OUTPUT.PUT_LINE(v_result);
 END;
-
-หรือ!!!!!8.3รึเปล่า
--- เรียกใช้ Procedure DEPT_REPORT
-BEGIN
-    EMP_PACKAGE.DEPT_REPORT(10);  -- ระบุ department_id ที่ต้องการ
-END;
-/
-
--- เรียกใช้ Function EMP_WORK_LOG
-DECLARE
-    v_result VARCHAR2(100);
-BEGIN
-    v_result := EMP_PACKAGE.EMP_WORK_LOG(1001);  -- ระบุ employee_id ที่ต้องการ
-    DBMS_OUTPUT.PUT_LINE(v_result);
-END;
-/
