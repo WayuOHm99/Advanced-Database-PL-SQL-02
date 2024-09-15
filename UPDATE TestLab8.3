@@ -1,0 +1,10 @@
+BEGIN
+    -- Test DEPT_REPORT procedure
+    DBMS_OUTPUT.PUT_LINE('Testing DEPT_REPORT:');
+    hr_pkg.DEPT_REPORT(50);
+    
+    DBMS_OUTPUT.PUT_LINE(CHR(10) || 'Testing EMP_WORK_LOG:');
+    -- Test EMP_WORK_LOG function
+    DBMS_OUTPUT.PUT_LINE(hr_pkg.EMP_WORK_LOG(1000));
+END;
+/
