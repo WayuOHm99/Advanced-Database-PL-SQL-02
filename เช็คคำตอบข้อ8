@@ -3,6 +3,9 @@ BEGIN
     DEPT_REPORT(50);  -- ระบุ department_id ที่ต้องการ
 END;
 
+หรือ
+execute DEPT_REPORT (50);
+
 เช็ค 8.2
 DECLARE
     v_result VARCHAR2(100);
