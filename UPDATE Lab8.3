@@ -1,0 +1,54 @@
+CREATE OR REPLACE PACKAGE hr_pkg AS
+    PROCEDURE DEPT_REPORT(p_dept_id IN NUMBER);
+    FUNCTION EMP_WORK_LOG(p_emp_id IN NUMBER) RETURN VARCHAR2;
+END hr_pkg;
+/
+
+CREATE OR REPLACE PACKAGE BODY hr_pkg AS
+    PROCEDURE DEPT_REPORT(p_dept_id IN NUMBER) IS
+        v_emp_id NUMBER;
+        v_first_name VARCHAR2(50);
+        v_last_name VARCHAR2(50);
+        v_salary NUMBER;
+        v_dept_name VARCHAR2(50);
+    BEGIN
+        SELECT e.employee_id, e.first_name, e.last_name, e.salary, d.department_name
+        INTO v_emp_id, v_first_name, v_last_name, v_salary, v_dept_name
+        FROM employees e
+        JOIN departments d ON e.department_id = d.department_id
+        WHERE e.department_id = p_dept_id
+        AND e.salary = (SELECT MAX(salary) FROM employees WHERE department_id = p_dept_id);
+
+        DBMS_OUTPUT.PUT_LINE('Department: ' || v_dept_name);
+        DBMS_OUTPUT.PUT_LINE('Employee with highest salary:');
+        DBMS_OUTPUT.PUT_LINE('ID: ' || v_emp_id);
+        DBMS_OUTPUT.PUT_LINE('Name: ' || v_first_name || ' ' || v_last_name);
+        DBMS_OUTPUT.PUT_LINE('Salary: $' || v_salary);
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            DBMS_OUTPUT.PUT_LINE('No employees found in department ' || p_dept_id);
+        WHEN OTHERS THEN
+            DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+    END DEPT_REPORT;
+
+    FUNCTION EMP_WORK_LOG(p_emp_id IN NUMBER) RETURN VARCHAR2 IS
+        v_log_time TIMESTAMP;
+        v_result VARCHAR2(100);
+    BEGIN
+        v_log_time := SYSTIMESTAMP;
+        
+        INSERT INTO WORK_LOG (employee_id, log_time)
+        VALUES (p_emp_id, v_log_time);
+        
+        v_result := p_emp_id || ' on ' || 
+                    TO_CHAR(v_log_time, 'DD/MM/YYYY') || ' at ' || 
+                    TO_CHAR(v_log_time, 'HH:MI AM');
+        
+        RETURN v_result;
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN 'Error: ' || SQLERRM;
+    END EMP_WORK_LOG;
+END hr_pkg;
+/
